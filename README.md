@@ -30,7 +30,7 @@ for that combination of provider and mechanism.
 |--------------|---------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Exoscale** | Yes                       | Yes (via IAM) | IAM uses CEL expressions; no separate bucket policy resource — bucket-scoping is done by adding a `parameters.bucket ==` condition to the IAM role policy                         |
 | **OVHcloud** | Yes                       | No            | Standard AWS IAM JSON attached per user; bucket policies are not supported                                                                                                        |
-| **Scaleway** | No                        | Yes           | IAM policies are project-scoped only, prefix restrictions achieved with extra bucket policy with `SCW` principal format                                                  |
+| **Scaleway** | No                        | Yes           | IAM policies are coarse-scoped only, prefix restrictions achieved with extra bucket policy with `SCW` principal format                                                            |
 | **IONOS**    | No                        | Yes           | No user-level IAM policies for S3; all access control must go through bucket policies                                                                                             |
 | **UpCloud**  | Yes                       | No            | Create distinct MOS policies that you can attach to the correct user. Alternative is predefined `ECSS3ReadOnlyAccess` set attached per user (coarse-grained, whole-service scope) |
 
