@@ -15,6 +15,7 @@ import subprocess
 import sys
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 
 GREEN = "\033[32m"
@@ -36,13 +37,22 @@ def skip(msg):
     print(f"  {YELLOW}SKIP{RESET}  {msg}")
 
 
-def s3_client(endpoint, access_key, secret_key):
+def s3_client(endpoint, access_key, secret_key, payload_signing=False):
+    extra = (
+        dict(
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        )
+        if payload_signing
+        else {}
+    )
     return boto3.client(
         "s3",
         endpoint_url=endpoint,
         aws_access_key_id=access_key,
         aws_secret_access_key=secret_key,
         region_name="us-east-1",
+        config=Config(s3={"payload_signing_enabled": payload_signing}, **extra),
     )
 
 
@@ -140,6 +150,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--tf-dir", metavar="DIR", help="Terraform module directory to read outputs from")
+    parser.add_argument("--payload-signing", action="store_true", help="Enable payload signing (required for UpCloud)")
 
     args = parser.parse_args()
     cfg = load_from_terraform(args.tf_dir)
@@ -147,8 +158,8 @@ def main():
     print(f"\n{BOLD}Endpoint:{RESET} {cfg['endpoint']}")
     print(f"{BOLD}Bucket:  {RESET} {cfg['bucket']}")
 
-    alice = s3_client(cfg["endpoint"], cfg["alice_key"], cfg["alice_secret"])
-    bob = s3_client(cfg["endpoint"], cfg["bob_key"], cfg["bob_secret"])
+    alice = s3_client(cfg["endpoint"], cfg["alice_key"], cfg["alice_secret"], args.payload_signing)
+    bob = s3_client(cfg["endpoint"], cfg["bob_key"], cfg["bob_secret"], args.payload_signing)
 
     total_passed = 0
     total_checks = 0
